@@ -52,7 +52,7 @@ class GenericFieldFilter(SimpleListFilter):
         provided in the query string and retrievable via
         `self.value()`.
         """
-        # Find all products with identifier ending with the requested version
+        # Find all records with given value for the filtered attribute
         if self.value():
             query = {self.parameter_name: self.value()}
             return queryset.filter(**query)
