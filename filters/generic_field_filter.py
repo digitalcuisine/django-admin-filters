@@ -17,6 +17,18 @@ class GenericFieldFilter(SimpleListFilter):
     def value_label(value):
         return value
 
+    def filter_values(self, model_admin):
+        """
+        Returns a list of possible values for the filter.
+        By default, all existing values for the filtered attribute are loaded and made into a 
+        unique list.
+        As this might be quite costly, you can override this method to provide your own list of
+        values
+        """
+        values = model_admin.model.objects.all().values_list(self.parameter_name, flat=True)
+        #  Unique values list (see f6 in http://www.peterbe.com/plog/uniqifiers-benchmark)
+        return list(set(values))
+
     def lookups(self, request, model_admin):
         """
         Returns a list of tuples. The first element in each
@@ -25,12 +37,13 @@ class GenericFieldFilter(SimpleListFilter):
         human-readable name for the option that will appear
         in the right sidebar.
         """
-        values = model_admin.model.objects.all().values_list(self.parameter_name, flat=True)
-        # Sorted unique components list (see f6 in http://www.peterbe.com/plog/uniqifiers-benchmark)
-        values = sorted(list(set(values)))
+        
+        # Get values and labels, and sort by label
+        values = self.filter_values(model_admin)
+        filters = sorted([(self.value_label(value), value) for value in values])
 
         return (
-            (value, self.value_label(value)) for value in values
+            (value, label) for label, value in filters
         )
 
     def queryset(self, request, queryset):
